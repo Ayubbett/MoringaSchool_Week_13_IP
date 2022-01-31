@@ -1,0 +1,418 @@
+---
+title: "Independent_Project Week 13"
+author: "Ayub Bett"
+date: "1/31/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+1) ##Defining the Question
+ a) Specifying the Question
+  We are tasked to create a supervised learning model to help identify which individuals are most likely    to  click on the ads in the blog. 
+
+b) Defining the metrics of success 
+  This project will be considered a success when we have found a supervised learning model with that can    predict individuals who are more likely to click on the ads with at least 75% to 90% accuracy.
+
+c) Understanding the context
+  A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her     blog. She currently targets audiences originating from various countries. In the past, she ran ads to     advertise a related course on the same blog and collected data in the process. She would now like to      employ your services as a Data Science Consultant to help her identify which individuals are most likely   to click on her ads.
+
+d) experimental design taken
+   1) Load the dataset
+  2) Clean the dataset.
+  3) perform Exploratory data analysis
+  4) Implement the solution
+  5) Challenge the solution.
+  6) Follow up questions.
+
+
+```{r}
+#installing packages
+library(data.table)
+
+#
+#Loading the dataset
+adver <- read.csv("http://bit.ly/IPAdvertisingData")
+
+#Previewing the first 6 rows
+head(adver)
+
+```
+```{r}
+#Checking for null values
+colSums(is.na(adver))
+
+```
+We do not have any null values in the dataframe.
+
+```{r}
+#Checking if there are any duplicated entries
+#dup_rows <- adver[duplicated(data1),]
+#dup_rows
+```
+Similarly there are no duplicated entries
+
+```{r}
+#Checking for outliers in the numerical columns using boxplot
+library(dplyr)
+num_data <- select_if(adver, is.numeric)             
+num_data 
+
+boxplot(num_data)
+```
+We notice that outliers are only available in the Area income column, but since they represent income from certain areas we fail to drop them
+
+```{r}
+#Checking the datatypes
+str(adver)
+
+
+```
+
+
+```{r}
+#checking the unique values in the categorical columns
+
+unique(adver$`Clicked.on.Ad`)
+
+```
+
+##Exploratory Data Analysis
+##Univariate Analysis
+#Measures of Central Tendency
+```{r}
+#Finding the mean of the numerical columns
+data_mean1 <- mean(adver$`Daily.Time.Spent.on.Site`)
+data_mean2 <- mean(adver$Age)
+data_mean3 <- mean(adver$`Area.Income`)
+data_mean4 <- mean(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+data_mean1
+
+#Printing results for Age
+data_mean2
+
+#Printing the results for Area income
+data_mean3
+
+#Printing results for daily internet usage
+data_mean4
+#
+
+```
+
+```{r}
+##Median
+#Finding the Median of the numerical columns
+median1 <- median(adver$`Daily.Time.Spent.on.Site`)
+median2 <- median(adver$Age)
+median3 <- median(adver$`Area.Income`)
+median4 <- median(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+median1
+
+#Printing results for Age
+median2
+
+#Printing the results for Area income
+median3
+
+#Printing results for daily internet usage
+median4
+
+```
+
+##Mode
+```{r}
+#Creating a function for finding mode
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+
+#Calculating the mode of each column
+mode1 <- getmode(adver$`Daily.Time.Spent.on.Site`)
+mode2 <- getmode(adver$Age)
+mode3 <- getmode(adver$`Area.Income`)
+mode4 <- getmode(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+mode1
+
+#Printing results for Age
+mode2
+
+#Printing the results for Area income
+mode3
+
+#Printing results for daily internet usage
+mode4
+
+
+```
+
+##Measures of Dispersion
+#Maximum values in each numerical column
+```{r}
+#Finding the maximum values in each cloumn
+max1 <- max(adver$`Daily.Time.Spent.on.Site`)
+max2 <- max(adver$Age)
+max3 <- max(adver$`Area.Income`)
+max4 <- max(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+max1
+
+#Printing results for Age
+max2
+
+#Printing the results for Area income
+max3
+
+#Printing results for daily internet usage
+max4
+
+```
+
+#Minimum values in the numerical columns
+```{r}
+#Finding the minimum values in each cloumn
+min1 <- min(adver$`Daily.Time.Spent.on.Site`)
+min2 <- min(adver$Age)
+min3 <- min(adver$`Area.Income`)
+min4 <- min(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+min1
+
+#Printing results for Age
+min2
+
+#Printing the results for Area income
+min3
+
+#Printing results for daily internet usage
+min4
+
+```
+
+##Quantiles 
+```{r}
+#Finding the quantiles in each cloumn
+quan1 <- quantile(adver$`Daily.Time.Spent.on.Site`)
+quan2 <- quantile(adver$Age)
+quan3 <- quantile(adver$`Area.Income`)
+quan4 <- quantile(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+quan1
+
+#Printing results for Age
+quan2
+
+#Printing the results for Area income
+quan3
+
+#Printing results for daily internet usage
+quan4
+
+```
+
+##Variance
+```{r}
+#Finding the variance in each cloumn
+var1 <- var(adver$`Daily.Time.Spent.on.Site`)
+var2 <- var(adver$Age)
+var3 <- var(adver$`Area.Income`)
+var4 <- var(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+var1
+
+#Printing results for Age
+var2
+
+#Printing the results for Area income
+var3
+
+#Printing results for daily internet usage
+var4
+
+```
+
+##Standard Deviation
+```{r}
+#Finding the standard deviation in each cloumn
+sd1 <- sd(adver$`Daily.Time.Spent.on.Site`)
+sd2 <- sd(adver$Age)
+sd3 <- sd(adver$`Area.Income`)
+sd4 <- sd(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+sd1
+
+#Printing results for Age
+sd2
+
+#Printing the results for Area income
+sd3
+
+#Printing results for daily internet usage
+sd4
+
+```
+
+##Skeweness
+```{r}
+library(moments)
+
+#Finding the skewness in each cloumn
+sk1 <- skewness(adver$`Daily.Time.Spent.on.Site`)
+sk2 <- skewness(adver$Age)
+sk3 <- skewness(adver$`Area.Income`)
+sk4 <- skewness(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+sk1
+
+#Printing results for Age
+sk2
+
+#Printing the results for Area income
+sk3
+
+#Printing results for daily internet usage
+sk4
+
+
+```
+From the results below we can note that Age column has a positive skewness meaning majority of the data are less than the mean. On the hand Daily internet usage column has a value close to 0 meaning its data is normally distributed. Finally both Daily time spent on site and area income columns have a negative value which interprets that majority of the data are greater than the mean which can also be interpreted that most data are concetrated on the right side of the tail.
+
+
+##Kurtosis
+```{r}
+#Finding the skewness in each cloumn
+kr1 <- kurtosis(adver$`Daily.Time.Spent.on.Site`)
+kr2 <- kurtosis(adver$Age)
+kr3 <- kurtosis(adver$`Area.Income`)
+kr4 <- kurtosis(adver$`Daily.Internet.Usage`)
+
+#Printing out the results for daily time spent on site
+kr1
+
+#Printing results for Age
+kr2
+
+#Printing the results for Area income
+kr3
+
+#Printing results for daily internet usage
+kr4
+
+#All the kurtosis values are less than 3 which is called Platykurtic.
+
+```
+
+##Bivariate analysis
+##Scatter plots
+```{r}
+#Plotting a scatter plot for age and daily time spent on site
+#Assigning age to age column
+age <- adver$Age
+
+#Assigning daily time to its column
+daily <- adver$`Daily.Time.Spent.on.Site`
+
+#Creating a scatter plot
+plot(age, daily, xlab = "Age", ylab = "daily time spent on site" )
+
+#There seems to be a trend where most time spent is by people of age 30 to 50
+```
+#Scatter plot between area income and daily internet usage
+```{r}
+#Assigning each column its respective name
+area <- adver$`Area.Income`
+usage <- adver$`Daily.Internet.Usage`
+
+#Plotting the scatter plot
+plot(area, usage, xlab = "Area Income", ylab = "daily internet usage" )
+
+```
+##Correlation
+```{r}
+#Finding the correlation of the numerical columns
+# Identify numeric columns
+# Install dplyr
+#install.packages("dplyr")                            
+library("dplyr") 
+
+
+
+# computing correlation matrix
+#install.packages("corrplot")
+library(corrplot)
+
+
+#Assigning m to the correlation
+# correlation matrix
+M<-cor(num_data)
+
+corrplot(M, method="number")
+
+#From the correlation coefficients below we can note the following
+#1.  There is a moderate positive correlation between Daily internet usage and Daily time spent on site.
+#2.  There is also a weak positive correlation between area income and daily time spent on site
+
+```
+### Naive BAyes Classifier
+
+```{r}
+#converting the target variable into a factor
+num_data$`Clicked.on.Ad` <- factor(num_data$`Clicked.on.Ad`)
+```
+
+```{r}
+#Loading libraries
+library(caret)
+library(caretEnsemble)
+```
+```{r}
+#Split the data into training and test data sets
+train_df <- createDataPartition(y = num_data$`Clicked.on.Ad`, p = 0.7, list = FALSE)
+train<- num_data[train_df,]
+test <- num_data[-train_df,]
+
+```
+```{r}
+library(e1071)
+```
+
+```{r}
+#building  Naive Bayes model using our training data.
+naive = naiveBayes(`Clicked.on.Ad` ~ ., data = train)
+```
+
+```{r}
+#Making prediction.
+y_pred = predict(naive, newdata = test)
+```
+
+```{r}
+#Create a table that holds the predicted and actual values
+confusion = table(test$`Clicked.on.Ad`, y_pred)
+
+```
+
+```{r}
+#Evaluate the model using the confusion matrix() function which tells us the accuracy of the model.
+confusionMatrix(confusion)
+```
+Our model misclassifies only 5 cases with an accuracy of 96%
+
+
