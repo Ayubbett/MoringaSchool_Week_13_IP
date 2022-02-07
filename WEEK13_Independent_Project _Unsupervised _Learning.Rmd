@@ -1,0 +1,217 @@
+---
+title: "Week_13_IP_part 2"
+author: "Ayub Bett"
+date: "1/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+1) ##Defining the Question
+ ##a) Specifying the Question
+Kira Plastinina (Links to an external site.) is a Russian brand that is sold through a defunct chain of retail stores in Russia, Ukraine, Kazakhstan, Belarus, China, Philippines, and Armenia. The brand’s Sales and Marketing team would like to understand their customer’s behavior from data that they have collected over the past year. More specifically, they would like to learn the characteristics of customer groups.
+
+ ##b) Defining the metrics of success 
+The project aims at building that will help the company learn more about their customers characteristics, we will therefore aim to build a model that has a silhouette coefficient greater than 0.5.
+
+ ##c) Understanding the context
+This dataset consists of 18 columns, 10 numerical and 8 categorical with the column Revenue acting as the label column. Some of the attributes such as "Administrative", "Administrative Duration", "Informational", "Informational Duration", "Product Related" and "Product Related Duration" represents the number of different types of pages visited by the visitor in that session and total time spent in each of these page categories. 
+
+ ##d) experimental design taken
+  1) Load the dataset
+  2) Clean the dataset.
+  3) perform Exploratory data analysis
+  4) Implement the solution
+  5) Challenge the solution.
+  6) Follow up questions.
+  
+  
+```{r}
+#installing the datatable library
+library(data.table)
+
+#Loading the dataset
+data2 <- read.csv("http://bit.ly/EcommerceCustomersDataset")
+
+#View the top 6 entries
+head(data2)
+```
+```{r}
+#Checking the shape of the dataframe
+str(data2)
+```
+We note that the dataset has 12330 rows and 18 columns
+
+
+```{r}
+#Checking for null values
+colSums(is.na(data2))
+
+```
+There are 14 missing values from the first 8 columns but since we have a pretty large dataframe we drop them.
+
+```{r}
+#Dropping the missing values
+data <- na.omit(data2)
+
+#Checking for changes
+colSums(is.na(data))
+```
+```{r}
+#Checking if there are duplicated entries
+dupli <- data[duplicated(data),]
+dupli
+```
+There are no duplicated entries
+
+```{r}
+
+#Checking unique values in the various columns
+unique(data$Weekend)
+```
+###EXPLORATORY DATA ANALYSIS
+###UNIVARIATE ANALYSIS
+```{r}
+library(ggplot2)
+ggplot(data, aes(x = Revenue)) + 
+  geom_bar(fill = "cornflowerblue", 
+           color="black") +
+  labs(x = "Revenue", 
+       y = "Frequency", 
+       title = "Revenue or not")
+```
+From the barplot we note that just under 2500 visitors on site led to addition of revenue.
+```{r}
+# QQ Plot for bounce rates
+ggplot(data, aes(sample = BounceRates)) + 
+  geom_qq() +
+  geom_qq_line()
+
+```
+```{r}
+library(ggplot2)
+ggplot(data, aes(x = VisitorType)) + 
+  geom_bar(fill = "cornflowerblue", 
+           color="black") +
+  labs(x = "VisitorType", 
+       y = "Frequency", 
+       title = "Count of VisitorType")
+```
+
+From the above barplot we find that majority of them visitors are the returning ones.
+
+
+###BIVARIATE ANALYSIS
+```{r}
+# scatter plot
+ggplot(data, aes(x = Region, y = OperatingSystems)) +
+  geom_point() +
+  ylim(10, 0)
+```
+From the scatter plot we note that The operating systems in theregions range 0 and 8
+```{r}
+#Scatter plot of months vs bounce rate
+ggplot(data, 
+       aes(x = Month, 
+           y = Informational)) +
+  geom_point()
+
+```
+###FEATURE ENGINERING
+###One-Hot Encoding
+```{r}
+library(caret)
+
+library(dplyr)
+
+dmy <- dummyVars(" ~ .", data = data, fullRank = T)
+data_transformed <- data.frame(predict(dmy, newdata = data))
+
+head(data_transformed)
+
+```
+
+```{r}
+head(data_transformed)
+
+#Now that we have encoded our categorical columns lets drop the target column Revenue
+df5<-data_transformed[,c(-27)]
+head(df5)
+
+```
+
+```{r}
+#Finding the optimal number of K
+#Loading the necessary libraries
+
+library(factoextra)
+library(cluster)
+#Elbow Method for finding the optimal number of clusters
+set.seed(123)
+# Compute and plot wss for k = 2 to k = 15.
+k.max <- 15
+data <- df5
+wss <- sapply(1:k.max, 
+              function(k){kmeans(df5, k, nstart=50,iter.max = 15 )$tot.withinss})
+wss
+plot(1:k.max, wss,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+
+
+```
+Our curve has an elbow at K=6 so we use 6 as our optimal K
+```{r}
+#Setting the seed
+set.seed(1)
+
+#perform k-means clustering with k = 4 clusters
+km <- kmeans(df5, centers = 6, nstart = 25)
+
+#view results
+km
+
+```
+```{r}
+library(factoextra)
+library(cluster)
+#plot results of final k-means model
+fviz_cluster(km, data = df5)
+
+```
+
+```{r}
+#find means of each cluster
+#aggregate(df5, by=list(cluster=km$cluster), mean)
+```
+###HIerarchical Clustering
+```{r}
+#library(cluster)
+
+#Finding the best linkage method to use
+#define linkage methods
+#m <- c( "average", "single", "complete", "ward")
+#names(m) <- c( "average", "single", "complete", "ward")
+
+#function to compute agglomerative coefficient
+#ac <- function(x) {
+ # agnes(df5, method = m)$ac
+#}
+
+#calculate agglomerative coefficient for each clustering linkage method
+#sapply(m, ac)
+```
+
+```{r}
+#library(cluster)
+#perform hierarchical clustering using Ward's minimum variance
+#clust <- agnes(df5, method = "ward")
+
+#produce dendrogram
+#pltree(clust, cex = 0.6, hang = -1, main = "Dendrogram") 
+```
+```{r}
+#str(df5)
+```
